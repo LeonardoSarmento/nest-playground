@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsEmail, IsOptional, IsStrongPassword, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsStrongPassword,
+  Length,
+} from 'class-validator';
 import {
   BeforeInsert,
   Column,
@@ -9,6 +15,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import bcrypt from 'bcrypt';
+import { USER_ROLE_CODE as ROLES } from '../enums/role.enum';
 
 @Entity({ name: 'user' })
 export class UserEntity {
@@ -30,6 +37,11 @@ export class UserEntity {
   })
   @IsStrongPassword(undefined, { message: '"Senha" não é forte suficiente' })
   password: string;
+
+  @Column()
+  @ApiProperty({ name: 'role', enum: ROLES, required: false })
+  @IsEnum(ROLES)
+  role: ROLES;
 
   @Column({ unique: true })
   @ApiProperty({
@@ -74,7 +86,7 @@ export class UserEntity {
     this.password = bcrypt.hashSync(this.password, 10);
   }
 
-  public verifyPassword(pass: string) {
-    return bcrypt.compareSync(pass, this.password);
+  public verifyPassword(password: string) {
+    return bcrypt.compareSync(password, this.password);
   }
 }

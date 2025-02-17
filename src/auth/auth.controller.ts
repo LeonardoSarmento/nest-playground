@@ -1,20 +1,26 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   Req,
   Res,
+  UnauthorizedException,
+  Get,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 import { UserService } from 'src/user/user.service';
 import { Request, Response } from 'express';
 import { LoginDto } from './dto/login.dto';
+import { JwtPayloadDto } from './dto/jwt.dto';
+import { Roles } from './decorators/roles.decorator';
+import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
+
+const tokenConfiguration = {
+  httpOnly: false,
+  secure: true,
+  sameSite: 'none',
+  path: '/',
+} as const;
 
 @Controller('auth')
 export class AuthController {
@@ -23,32 +29,71 @@ export class AuthController {
     private readonly _userService: UserService,
   ) {}
 
-  @Post()
+  tokenConfiguration = {
+    httpOnly: false,
+    secure: true,
+    sameSite: 'none',
+    path: '/',
+  };
+
+  @Post('/login')
   async login(
     @Req() req: Request,
     @Res() res: Response,
     @Body() credential: LoginDto,
   ) {
-    return this.authService.create(createAuthDto);
+    const userIsValid = await this._service.validateUser(
+      credential.username,
+      credential.password,
+    );
+    if (!userIsValid.success)
+      throw new UnauthorizedException('Error ao validar "Usuário');
+
+    const tokenPayload: JwtPayloadDto = {
+      userId: userIsValid.data.id,
+      role: userIsValid.data.role,
+    };
+
+    const token = this._service.generateToken(tokenPayload);
+    req.user = tokenPayload;
+    res.cookie('authToken', token, tokenConfiguration).send({ token }).end();
+
+    const refreshTokenPayload: JwtPayloadDto = {
+      userId: userIsValid.data.id,
+      role: userIsValid.data.role,
+    };
+    const refreshToken =
+      this._service.generateRefreshToken(refreshTokenPayload);
+
+    res
+      .cookie('authRefreshToken', refreshToken, tokenConfiguration)
+      .send({ refreshToken })
+      .end();
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('/logout')
+  public logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.clearCookie('authToken', tokenConfiguration);
+    res.clearCookie('authRefreshToken', tokenConfiguration);
+    res.status(204);
+    return;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Get('/profile')
+  public async getProfile(@Req() req: Request) {
+    const tokenPayload = this._service.verifyTokenPayload(
+      req.cookies['authToken'] as string,
+    );
+    return await this._userService.findByUnique({ id: tokenPayload?.userId });
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Roles([ROLES.ADMIN, ROLES.USER])
+  @Get('/token')
+  public getCurrentProfile(@Req() req: Request) {
+    const token = req.cookies['authToken'] as string;
+    return this._service.verifyTokenPayload(token);
   }
 }
