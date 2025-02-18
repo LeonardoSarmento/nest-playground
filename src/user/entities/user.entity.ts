@@ -9,12 +9,13 @@ import {
 } from 'class-validator';
 import {
   BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { USER_ROLE_CODE as ROLES } from '../enums/role.enum';
 
 @Entity({ name: 'user' })
@@ -38,12 +39,12 @@ export class UserEntity {
   @IsStrongPassword(undefined, { message: '"Senha" não é forte suficiente' })
   password: string;
 
-  @Column()
-  @ApiProperty({ name: 'role', enum: ROLES, required: false })
+  @Column({ type: 'text' })
+  @ApiProperty({ enum: ROLES, required: false })
   @IsEnum(ROLES)
   role: ROLES;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   @ApiProperty({
     type: String,
     description: 'Qualquer texto sera colocado minusculo',
@@ -54,7 +55,7 @@ export class UserEntity {
   @IsOptional()
   email?: string;
 
-  @Column()
+  @Column({ type: 'date', nullable: true })
   @ApiProperty({ type: Date, required: false })
   @Type(() => Date)
   @IsOptional()
@@ -70,18 +71,16 @@ export class UserEntity {
   @IsOptional()
   updatedAt: Date;
 
-  // constructor(entity?: UserEntity | UserCreateDto | UserUpdateDto | any) {
-  //   // console.debug(entity)
-  //   if (entity) {
-  //     this.id = entity.id;
-  //     this.email = entity.email;
-  //     this.username = entity.username;
-  //     this.birthday = entity.birthday;
-  //     this.createdAt = entity.createdAt;
-  //   }
-  // }
+  constructor(
+    entity?: Partial<Omit<UserEntity, 'encryptPassword' | 'verifyPassword'>>,
+  ) {
+    if (entity) {
+      Object.assign(this, entity);
+    }
+  }
 
   @BeforeInsert()
+  @BeforeUpdate()
   encryptPassword() {
     this.password = bcrypt.hashSync(this.password, 10);
   }

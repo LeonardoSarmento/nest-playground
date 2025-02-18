@@ -8,7 +8,8 @@ import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import configuration from 'src/config/configuration';
-import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { tokenName } from '../configuration/constants.configuration';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -43,7 +44,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
       throw new UnauthorizedException('Erro ao validar Token');
     }
-    return super.canActivate(context);
+    return true;
   }
 
   private extractTokenFromHeader(request: Request): string {
@@ -51,7 +52,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     let req_token = type === 'Bearer' ? token : undefined;
 
     if (!req_token) {
-      req_token = request.cookies['authtoken'] as string;
+      req_token = request.cookies[tokenName] as string;
     }
 
     return req_token;

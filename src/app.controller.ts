@@ -1,10 +1,12 @@
 import { All, Controller, Get, Req, Res } from '@nestjs/common';
 import type { Response, Request } from 'express';
-import { ApiExcludeEndpoint } from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import configuration from './config/configuration';
+import { Public } from './auth/decorators/public.decorator';
 
 @Controller()
+@ApiTags('Application')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
@@ -15,6 +17,7 @@ export class AppController {
     return res.status(302).redirect(`${APP_BASENAME}/swagger`);
   }
 
+  @Public()
   @Get('/health')
   public checkHealth(@Req() req: Request, @Res() res: Response) {
     return res.status(200).send('OK 👍 (*-*) 👍');

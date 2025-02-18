@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
 import { UserUpdateDto } from './dto/update-user.dto';
-import { UserCreateDto } from './dto/create-user.dto';
 import { UserUniquesDto } from './dto/unique-user.dto';
 import { Helpers } from 'src/helpers/helpers.global';
 
@@ -13,7 +12,7 @@ export class UserRepository {
     private readonly _repository: Repository<UserEntity>,
   ) {}
 
-  async create(user: UserCreateDto): Promise<UserEntity> {
+  async create(user: UserEntity): Promise<UserEntity> {
     return this._repository.save(user);
   }
 

@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from 'src/user/entities/user.entity';
@@ -20,7 +20,7 @@ export class AuthService {
     username: UserEntity['username'],
     password: UserEntity['password'],
   ) {
-    const user = await this._userService.findByUnique({ username });
+    const user = await this._userService.findByUnique({ username: username });
 
     if (!user) throw new UserNotFoundException();
 

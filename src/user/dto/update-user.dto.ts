@@ -6,4 +6,16 @@ export class UserUpdateDto extends PartialType(
 ) {
   @ApiHideProperty()
   updatedAt?: Date | undefined = new Date();
+
+  constructor(dto?: UserUpdateDto) {
+    super();
+
+    if (dto) {
+      Object.assign(this, dto);
+    }
+  }
+
+  public toEntity(): UserEntity {
+    return new UserEntity(this);
+  }
 }

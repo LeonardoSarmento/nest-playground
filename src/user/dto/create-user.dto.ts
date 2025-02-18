@@ -14,9 +14,21 @@ export class UserCreateDto extends OmitType(UserEntity, [
 
   @ApiHideProperty()
   updatedAt: UserEntity['updatedAt'] = new Date();
+
+  constructor(dto?: UserCreateDtoType) {
+    super();
+
+    if (dto) {
+      Object.assign(this, dto);
+    }
+  }
+
+  public toEntity(): UserEntity {
+    return new UserEntity(this);
+  }
 }
 
 export type UserCreateDtoType = Pick<
   Partial<UserCreateDto>,
-  'username' | 'email' | 'birthday'
+  'username' | 'email' | 'birthday' | 'role' | 'password'
 >;

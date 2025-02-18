@@ -20,9 +20,10 @@ import { AuthModule } from './auth/auth.module';
       isGlobal: true,
       load: [configuration],
     }),
+
     DatabaseModule,
-    UserModule,
     AuthModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
