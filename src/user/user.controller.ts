@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   Req,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserCreateDto } from './dto/create-user.dto';
@@ -22,6 +24,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
 import { tokenName } from 'src/auth/configuration/constants.configuration';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 @ApiTags('User')
 export class UserController {

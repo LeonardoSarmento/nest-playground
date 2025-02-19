@@ -10,22 +10,28 @@ import { JwtAuthGuard } from './guard/jwt-auth.guard';
 import { RolesGuard } from './guard/roles.guard';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { ConfigModule } from '@nestjs/config';
+import jwtConfig from './configuration/constants.configuration';
+import { HashingService } from './hashing/hashing.service';
+import { BcryptService } from './hashing/bcrypt.service';
 
 @Global()
 @Module({
   imports: [
     UserModule,
     PassportModule,
-    JwtModule.register({
-      secret: configuration().jwt_secret,
-      signOptions: { expiresIn: '60m' },
-    }),
+    ConfigModule.forFeature(jwtConfig),
+    JwtModule.registerAsync(jwtConfig.asProvider()),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
     AuthStrategy,
     JwtStrategy,
+    {
+      provide: HashingService,
+      useClass: BcryptService,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -35,6 +41,6 @@ import { JwtStrategy } from './strategy/jwt.strategy';
       useClass: RolesGuard,
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtModule, ConfigModule],
 })
 export class AuthModule {}

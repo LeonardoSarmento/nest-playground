@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Exclude, Transform, Type } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -20,7 +20,7 @@ import { USER_ROLE_CODE as ROLES } from '../enums/role.enum';
 
 @Entity({ name: 'user' })
 export class UserEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   @ApiProperty({ type: Number })
   id: number;
 
@@ -33,6 +33,7 @@ export class UserEntity {
 
   @Column()
   @ApiProperty({ type: String })
+  @Exclude({ toPlainOnly: true })
   @Length(8, 255, {
     message: '"Senha" deve conter entre $constraint1 a $constraint2',
   })
@@ -51,7 +52,7 @@ export class UserEntity {
   })
   @IsEmail({}, { message: '"$property" com formato invalido' })
   @Type(() => String)
-  @Transform(({ value }: { value: string }) => value.toLowerCase())
+  @Transform(({ value }: { value: string }) => value?.toLowerCase())
   @IsOptional()
   email?: string;
 

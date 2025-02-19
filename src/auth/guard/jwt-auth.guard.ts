@@ -10,11 +10,12 @@ import { Request } from 'express';
 import configuration from 'src/config/configuration';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { tokenName } from '../configuration/constants.configuration';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
-    private _jwtService: JwtService,
+    private _authService: AuthService,
     private reflector: Reflector,
   ) {
     super();
@@ -32,18 +33,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Token não encontrado');
+      throw new UnauthorizedException('Token não encontrado jwt');
     }
-    try {
-      this._jwtService.verify(token, {
-        secret: configuration().jwt_secret,
-      });
-    } catch (err) {
-      if (err instanceof TokenExpiredError)
-        throw new UnauthorizedException('Token expirado');
-
-      throw new UnauthorizedException('Erro ao validar Token');
-    }
+    this._authService.verifyTokenPayload(token);
     return true;
   }
 

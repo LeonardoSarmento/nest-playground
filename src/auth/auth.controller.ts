@@ -39,33 +39,7 @@ export class AuthController {
     @Res() res: Response,
     @Body() credential: LoginDto,
   ) {
-    const userIsValid = await this._service.validateUser(
-      credential.username,
-      credential.password,
-    );
-    if (!userIsValid.success)
-      throw new UnauthorizedException('Error ao validar "Usuário');
-
-    const tokenPayload: JwtPayloadDto = {
-      userId: userIsValid.data.id,
-      role: userIsValid.data.role,
-    };
-
-    const token = this._service.generateToken(tokenPayload);
-    req.user = tokenPayload;
-    res.cookie(tokenName, token, tokenConfiguration);
-
-    const refreshTokenPayload: JwtPayloadDto = {
-      userId: userIsValid.data.id,
-      role: userIsValid.data.role,
-    };
-    const refreshToken =
-      this._service.generateRefreshToken(refreshTokenPayload);
-
-    res
-      .cookie(refreshTokenName, refreshToken, tokenConfiguration)
-      .send({ token, refreshToken })
-      .end();
+    return this._service.login(req, res, credential);
   }
 
   @Post('/logout')

@@ -9,6 +9,10 @@ export default () => ({
   jwt_secret:
     process.env.JWT_SHA256 ||
     '412ba163c5b3db42dfc0310570fa269c594efdef192ed8d30a46b0b764c1ed79',
+  JWT_TOKEN_AUDIENCE: process.env.JWT_TOKEN_AUDIENCE || 'http://localhost:3000',
+  JWT_TOKEN_ISSUER: process.env.JWT_TOKEN_ISSUER || 'http://localhost:3000',
+  JWT_TTL: process.env.JWT_TTL || 3600,
+  JWT_REFRESH_TTL: process.env.JWT_REFRESH_TTL || 86400,
 
   database: {
     drive: process.env.DATABASE_DRIVE || 'sqlite',

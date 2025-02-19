@@ -7,17 +7,16 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { JwtPayloadDto } from '../dto/jwt.dto';
-import configuration from '../../config/configuration';
 import { Roles } from '../decorators/roles.decorator';
-import { JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { TokenExpiredError } from '@nestjs/jwt';
 import { tokenName } from '../configuration/constants.configuration';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private jwtService: JwtService,
+    private _authService: AuthService,
   ) {}
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.get(Roles, context.getHandler());
@@ -30,21 +29,14 @@ export class RolesGuard implements CanActivate {
 
     const authtoken = req.cookies[tokenName] as string;
 
-    if (!authtoken) throw new UnauthorizedException('Token não encontrado');
+    if (!authtoken)
+      throw new UnauthorizedException('Token não encontrado roles');
 
     let authResult: boolean = false;
 
-    console.debug('authToken', authtoken);
+    const JwtPayload = this._authService.verifyTokenPayload(authtoken);
+    authResult = requiredRoles.some((role) => JwtPayload?.role === role);
 
-    try {
-      const JwtPayload: JwtPayloadDto = this.jwtService.verify(authtoken, {
-        secret: configuration().jwt_secret,
-      });
-      authResult = requiredRoles.some((role) => JwtPayload.role === role);
-    } catch (error) {
-      if (error instanceof TokenExpiredError)
-        throw new UnauthorizedException('Token expirado');
-    }
     if (authResult === false)
       throw new ForbiddenException('Cargo não autorizado');
 
