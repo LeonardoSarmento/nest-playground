@@ -1,10 +1,9 @@
-import * as bcrypt from 'bcrypt';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { UserNotFoundException } from './exception/userNotFound..exception';
 import { WrongPasswordException } from './exception/wrongPassword.exception';
-import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { JwtPayloadDto } from './dto/jwt.dto';
 import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
 import { LoginDto } from './dto/login.dto';
@@ -40,23 +39,40 @@ export class AuthService {
       role: userIsValid.data.role,
     };
 
-    const token = this.generateToken(tokenPayload);
+    return await this.createToken(req, res, tokenPayload);
+  }
+
+  public async refreshToken(req: Request, res: Response, token: string) {
+    const { userId } = await this.verifyTokenPayload(token);
+
+    const user = await this._userService.findByUnique({ id: userId });
+
+    if (!user) throw new UnauthorizedException('Error ao validar "Usuário"');
+
+    const tokenPayload: JwtPayloadDto = {
+      userId: user.id,
+      role: user.role,
+    };
+
+    return await this.createToken(req, res, tokenPayload);
+  }
+
+  public async createToken(
+    req: Request,
+    res: Response,
+    tokenPayload: JwtPayloadDto,
+  ) {
+    const token = await this.generateToken(tokenPayload);
     req.user = tokenPayload;
     res.cookie(tokenName, token, tokenConfiguration);
 
-    const refreshTokenPayload: JwtPayloadDto = {
-      userId: userIsValid.data.id,
-      role: userIsValid.data.role,
-    };
-    const refreshToken = this.generateToken(
-      refreshTokenPayload,
+    const refreshToken = await this.generateToken(
+      tokenPayload,
       this.jwtConfiguration.jwtRefreshTtl,
     );
 
-    res
-      .cookie(refreshTokenName, refreshToken, tokenConfiguration)
-      .send({ token, refreshToken })
-      .end();
+    res.cookie(refreshTokenName, refreshToken, tokenConfiguration);
+    return { token, refreshToken };
   }
 
   public async validateUser(
@@ -82,30 +98,42 @@ export class AuthService {
     };
   }
 
-  public generateToken(
+  public async generateToken(
     payload: JwtPayloadDto,
-    expiresIn?: string | number | undefined,
+    expiresIn?: string | number,
   ) {
-    return this._jwtService.sign(payload, {
+    return await this._jwtService.signAsync(payload, {
       secret: this.jwtConfiguration.secret,
-      expiresIn: expiresIn ?? this.jwtConfiguration.jwtTtl,
+      expiresIn: expiresIn ? expiresIn : this.jwtConfiguration.jwtTtl,
     });
   }
 
-  public verifyTokenPayload(token: string, ignoreExpiration?: boolean) {
+  public async verifyTokenPayload(token: string, ignoreExpiration?: boolean) {
     try {
-      const decoded: JwtDecodePayloadDto = this._jwtService.verify(token, {
-        secret: this.jwtConfiguration.secret,
-        ignoreExpiration,
-      });
+      const decoded: JwtDecodePayloadDto = await this._jwtService.verifyAsync(
+        token,
+        {
+          secret: this.jwtConfiguration.secret,
+          ignoreExpiration,
+        },
+      );
       return decoded;
-    } catch (error) {
-      if (error instanceof TokenExpiredError)
-        throw new UnauthorizedException('Token expirado');
-      if (error instanceof JsonWebTokenError)
-        throw new UnauthorizedException('Token não encontrado');
-      console.log(error);
+    } catch (error: unknown) {
+      if (this.isJwtError(error)) {
+        if (error.name === 'TokenExpiredError') {
+          throw new UnauthorizedException('Token expirado');
+        }
+        if (error.name === 'JsonWebTokenError') {
+          throw new UnauthorizedException('Token inválido');
+        }
+      }
+
+      throw new UnauthorizedException('Erro desconhecido na autenticação');
     }
+  }
+
+  private isJwtError(error: unknown): error is Error & { name: string } {
+    return typeof error === 'object' && error !== null && 'name' in error;
   }
 
   public decodeToken(token: string): JwtDecodePayloadDto {

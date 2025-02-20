@@ -4,14 +4,14 @@ import {
   Body,
   Req,
   Res,
-  UnauthorizedException,
   Get,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { Request, Response } from 'express';
 import { LoginDto } from './dto/login.dto';
-import { JwtPayloadDto } from './dto/jwt.dto';
 import { Roles } from './decorators/roles.decorator';
 import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -22,7 +22,9 @@ import {
   tokenConfiguration,
   tokenName,
 } from './configuration/constants.configuration';
+import { UserEntity } from 'src/user/entities/user.entity';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
 @ApiTags('Authentication')
 export class AuthController {
@@ -39,27 +41,31 @@ export class AuthController {
     @Res() res: Response,
     @Body() credential: LoginDto,
   ) {
-    return this._service.login(req, res, credential);
+    const response = await this._service.login(req, res, credential);
+    return res.json(response);
   }
 
   @Post('/logout')
-  public logout(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  public logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(tokenName, tokenConfiguration);
     res.clearCookie(refreshTokenName, tokenConfiguration);
     res.status(204);
     return;
   }
 
+  @Post('/refreshToken')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies[refreshTokenName] as string;
+    return await this._service.refreshToken(req, res, refreshToken);
+  }
+
   @Get('/profile')
+  @ApiOkResponse({ type: UserEntity })
   @Roles([ROLES.ADMIN, ROLES.USER])
   public async getProfile(@Req() req: Request) {
-    const tokenPayload = this._service.verifyTokenPayload(
+    const tokenPayload = await this._service.verifyTokenPayload(
       req.cookies[tokenName] as string,
     );
-    console.debug('tokenPayload', tokenPayload);
     return await this._userService.findByUnique({ id: tokenPayload?.userId });
   }
 

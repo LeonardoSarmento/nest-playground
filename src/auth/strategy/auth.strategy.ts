@@ -15,7 +15,6 @@ export class AuthStrategy extends PassportStrategy(Strategy) {
     password: UserEntity['password'],
   ) {
     const user = await this._authService.validateUser(username, password);
-    console.debug('user', user);
     if (!user) throw new UnauthorizedException();
     return user;
   }

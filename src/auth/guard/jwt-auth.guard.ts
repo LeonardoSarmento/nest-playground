@@ -4,12 +4,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
-import configuration from 'src/config/configuration';
+import { Request, Response } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { tokenName } from '../configuration/constants.configuration';
+import {
+  refreshTokenName,
+  tokenName,
+} from '../configuration/constants.configuration';
 import { AuthService } from '../auth.service';
 
 @Injectable()
@@ -21,7 +22,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext) {
+  async canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -30,16 +31,38 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
     const request: Request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
+    const response = context.switchToHttp().getResponse<Response>();
+
+    const token = this.extractTokenFromHeader(request, tokenName);
 
     if (!token) {
-      throw new UnauthorizedException('Token não encontrado jwt');
+      throw new UnauthorizedException('Token não encontrado');
     }
-    this._authService.verifyTokenPayload(token);
-    return true;
+
+    try {
+      await this._authService.verifyTokenPayload(token);
+      return true;
+    } catch (error) {
+      if (this.isJwtError(error)) {
+        if (error.name === 'UnauthorizedException' && error.status === 401) {
+          const refreshToken = this.extractTokenFromHeader(
+            request,
+            refreshTokenName,
+          );
+
+          await this._authService.refreshToken(request, response, refreshToken);
+
+          return true;
+        }
+        if (error.name === 'JsonWebTokenError') {
+          throw new UnauthorizedException('Token inválido');
+        }
+      }
+      throw new UnauthorizedException('Erro desconhecido na autenticação');
+    }
   }
 
-  private extractTokenFromHeader(request: Request): string {
+  private extractTokenFromHeader(request: Request, tokenName: string): string {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     let req_token = type === 'Bearer' ? token : undefined;
 
@@ -48,5 +71,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     return req_token;
+  }
+
+  private isJwtError(
+    error: unknown,
+  ): error is Error & { name: string; status: number } {
+    return typeof error === 'object' && error !== null && 'name' in error;
   }
 }

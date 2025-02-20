@@ -39,7 +39,7 @@ export class UserController {
     const jwt = req.cookies[tokenName] as string;
     let userRequesting: JwtPayloadDto | undefined;
     if (jwt) {
-      userRequesting = this._authService.verifyTokenPayload(jwt);
+      userRequesting = await this._authService.verifyTokenPayload(jwt);
     }
     return await this._userService.create(createUserDto, userRequesting);
   }

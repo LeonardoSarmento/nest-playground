@@ -8,7 +8,6 @@ import {
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { Roles } from '../decorators/roles.decorator';
-import { TokenExpiredError } from '@nestjs/jwt';
 import { tokenName } from '../configuration/constants.configuration';
 import { AuthService } from '../auth.service';
 
@@ -18,7 +17,7 @@ export class RolesGuard implements CanActivate {
     private reflector: Reflector,
     private _authService: AuthService,
   ) {}
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.get(Roles, context.getHandler());
 
     if (!requiredRoles) {
@@ -29,12 +28,11 @@ export class RolesGuard implements CanActivate {
 
     const authtoken = req.cookies[tokenName] as string;
 
-    if (!authtoken)
-      throw new UnauthorizedException('Token não encontrado roles');
+    if (!authtoken) throw new UnauthorizedException('Token não encontrado');
 
     let authResult: boolean = false;
 
-    const JwtPayload = this._authService.verifyTokenPayload(authtoken);
+    const JwtPayload = await this._authService.verifyTokenPayload(authtoken);
     authResult = requiredRoles.some((role) => JwtPayload?.role === role);
 
     if (authResult === false)
