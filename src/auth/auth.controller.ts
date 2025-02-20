@@ -23,6 +23,7 @@ import {
   tokenName,
 } from './configuration/constants.configuration';
 import { UserEntity } from 'src/user/entities/user.entity';
+import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
@@ -42,9 +43,10 @@ export class AuthController {
     @Body() credential: LoginDto,
   ) {
     const response = await this._service.login(req, res, credential);
-    return res.json(response);
+    return res.send(response);
   }
 
+  @Public()
   @Post('/logout')
   public logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie(tokenName, tokenConfiguration);
@@ -54,9 +56,11 @@ export class AuthController {
   }
 
   @Post('/refreshToken')
+  @ApiOkResponse({ type: AuthEntity })
   async refreshToken(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies[refreshTokenName] as string;
-    return await this._service.refreshToken(req, res, refreshToken);
+    const response = await this._service.refreshToken(req, res, refreshToken);
+    return res.json(response);
   }
 
   @Get('/profile')
@@ -70,6 +74,7 @@ export class AuthController {
   }
 
   @Roles([ROLES.ADMIN, ROLES.USER])
+  @ApiOkResponse({ type: JwtDecodePayloadDto })
   @Get('/token')
   public getCurrentProfile(@Req() req: Request) {
     const token = req.cookies[tokenName] as string;
