@@ -32,10 +32,7 @@ export class UserRepository {
     if (Object.keys(uniques).length === 0) return null;
 
     const user = await this._repository.findOne({
-      where: [
-        { id: uniques.id ?? undefined },
-        { email: uniques.email ?? undefined },
-      ],
+      where: [uniques],
     });
 
     return user && Helpers.isMatching<UserEntity>(user, uniques) ? user : null;

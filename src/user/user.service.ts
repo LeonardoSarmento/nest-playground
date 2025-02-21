@@ -45,7 +45,6 @@ export class UserService {
 
   async findByUnique(uniques: UserUniquesDto) {
     const user = await this._repository.findByUnique(uniques);
-    // if (!user) throw new NotFoundException('Usuário não encontrado');
     return user;
   }
 
