@@ -1,8 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from 'src/user/entities/user.entity';
-import { UserNotFoundException } from './exception/userNotFound..exception';
-import { WrongPasswordException } from './exception/wrongPassword.exception';
+import { UserNotFoundException } from './exception/user-notFound.exception';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { JwtPayloadDto } from './dto/jwt.dto';
 import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
@@ -15,6 +14,7 @@ import jwtConfig, {
   tokenName,
 } from './configuration/constants.configuration';
 import { HashingService } from './hashing/hashing.service';
+import { WrongUserLoginException } from './exception/wrong-login.exception';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +40,6 @@ export class AuthService {
     };
 
     return await this.createToken(req, res, tokenPayload);
-    // return res.send(response).end();
   }
 
   public async refreshToken(req: Request, res: Response, token: string) {
@@ -56,7 +55,6 @@ export class AuthService {
     };
 
     return await this.createToken(req, res, tokenPayload);
-    // return res.send(response).end();
   }
 
   public async createToken(
@@ -91,7 +89,7 @@ export class AuthService {
     );
 
     if (!passwordInvalid) {
-      throw new WrongPasswordException();
+      throw new WrongUserLoginException();
     }
 
     return {
