@@ -73,10 +73,7 @@ export class AuthService {
       this.jwtConfiguration.jwtRefreshTtl,
     );
 
-    res
-      .cookie(refreshTokenName, refreshToken, tokenConfiguration)
-      .send({ token, refreshToken })
-      .end();
+    res.cookie(refreshTokenName, refreshToken, tokenConfiguration);
     return { token, refreshToken };
   }
 
