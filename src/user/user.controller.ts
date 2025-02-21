@@ -35,6 +35,7 @@ export class UserController {
 
   @Post()
   @ApiOkResponse({ type: UserEntity })
+  @Roles([ROLES.ADMIN])
   async create(@Body() createUserDto: UserCreateDto, @Req() req: Request) {
     const jwt = req.cookies[tokenName] as string;
     let userRequesting: JwtPayloadDto | undefined;
