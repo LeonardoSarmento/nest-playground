@@ -12,8 +12,9 @@ import { DatabaseModule } from './database/database.module';
 import configuration from './config/configuration';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorExceptionFilter } from './common/filters/errorExceptions.filters';
+import { NormalizeResponseInterceptor } from './common/interceptors/normalize-data.interceptor';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ErrorExceptionFilter } from './common/filters/errorExceptions.filters';
   providers: [
     AppService,
     { provide: APP_FILTER, useClass: ErrorExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: NormalizeResponseInterceptor },
   ],
 })
 export class AppModule implements NestModule {
