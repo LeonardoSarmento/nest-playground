@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  Req,
   ClassSerializerInterceptor,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,32 +16,20 @@ import { UserUpdateDto } from './dto/update-user.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { UserUniquesDto } from './dto/unique-user.dto';
-import { Request } from 'express';
-import { AuthService } from 'src/auth/auth.service';
-import { JwtPayloadDto } from 'src/auth/dto/jwt.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
-import { tokenName } from 'src/auth/configuration/constants.configuration';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 @ApiTags('User')
 export class UserController {
-  constructor(
-    private readonly _userService: UserService,
-    private readonly _authService: AuthService,
-  ) {}
+  constructor(private readonly _userService: UserService) {}
 
   @Post()
   @ApiOkResponse({ type: UserEntity })
   @Roles([ROLES.ADMIN])
-  async create(@Body() createUserDto: UserCreateDto, @Req() req: Request) {
-    const jwt = req.cookies[tokenName] as string;
-    let userRequesting: JwtPayloadDto | undefined;
-    if (jwt) {
-      userRequesting = await this._authService.verifyTokenPayload(jwt);
-    }
-    return await this._userService.create(createUserDto, userRequesting);
+  async create(@Body() createUserDto: UserCreateDto) {
+    return await this._userService.create(createUserDto);
   }
 
   @Get(['all'])

@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -9,31 +8,16 @@ import { UserUpdateDto } from './dto/update-user.dto';
 import { UserRepository } from './user.repository';
 import { UserEntity } from './entities/user.entity';
 import { UserUniquesDto } from './dto/unique-user.dto';
-import { JwtPayloadDto } from 'src/auth/dto/jwt.dto';
-import { USER_ROLE_CODE } from './enums/role.enum';
 
 @Injectable()
 export class UserService {
   constructor(private readonly _repository: UserRepository) {}
 
-  async create(createUserDto: UserCreateDto, userRequesting?: JwtPayloadDto) {
-    if (userRequesting) {
-      const userCreator = await this.findByUnique({
-        id: userRequesting.userId,
-      });
-      if (userCreator && userCreator.role !== USER_ROLE_CODE.ADMIN)
-        throw new ForbiddenException(
-          'Cargo insuficiente para essa funcionalidade',
-        );
-    }
-    const unavailableUnique = await this.findByUnique({
-      id: createUserDto.id,
-      username: createUserDto.username,
-      email: createUserDto.email,
-    });
-    if (unavailableUnique)
+  async create(createUserDto: UserCreateDto) {
+    const noUserHasUniques = await this.findBySafeUnique(createUserDto);
+    if (noUserHasUniques)
       throw new UnprocessableEntityException(
-        'Alguns dados únicos de "Pessoa" já em uso',
+        'Alguns dados únicos de "Usuário" já em uso',
       );
     const user = createUserDto.toEntity();
     return this._repository.create(user);
@@ -41,6 +25,11 @@ export class UserService {
 
   async findAll() {
     return this._repository.findAll();
+  }
+
+  async findBySafeUnique(uniques: UserUniquesDto) {
+    const user = await this._repository.safeFindByUnique(uniques);
+    return user;
   }
 
   async findByUnique(uniques: UserUniquesDto) {

@@ -36,7 +36,7 @@ export class RolesGuard implements CanActivate {
     authResult = requiredRoles.some((role) => JwtPayload?.role === role);
 
     if (authResult === false)
-      throw new ForbiddenException('Cargo não autorizado');
+      throw new ForbiddenException('Nível de cargo não autorizado');
 
     return true;
   }

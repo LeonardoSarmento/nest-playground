@@ -28,11 +28,27 @@ export class UserRepository {
     return this.getById(id);
   }
 
+  async safeFindByUnique(uniques: UserUniquesDto): Promise<UserEntity | null> {
+    if (Object.keys(uniques).length === 0) return null;
+    const user = await this._repository.findOne({
+      where: [
+        { id: uniques.id },
+        { username: uniques.username },
+        { email: uniques.email },
+      ],
+    });
+    return user;
+  }
+
   async findByUnique(uniques: UserUniquesDto): Promise<UserEntity | null> {
     if (Object.keys(uniques).length === 0) return null;
 
     const user = await this._repository.findOne({
-      where: [uniques],
+      where: [
+        { id: uniques.id },
+        { username: uniques.username },
+        { email: uniques.email },
+      ],
     });
 
     return user && Helpers.isMatching<UserEntity>(user, uniques) ? user : null;
