@@ -42,8 +42,7 @@ export class AuthController {
     @Res() res: Response,
     @Body() credential: LoginDto,
   ) {
-    const response = await this._service.login(req, res, credential);
-    return res.send(response);
+    return await this._service.login(req, res, credential);
   }
 
   @Public()
@@ -59,8 +58,7 @@ export class AuthController {
   @ApiOkResponse({ type: AuthEntity })
   async refreshToken(@Req() req: Request, @Res() res: Response) {
     const refreshToken = req.cookies[refreshTokenName] as string;
-    const response = await this._service.refreshToken(req, res, refreshToken);
-    return res.json(response);
+    return await this._service.refreshToken(req, res, refreshToken);
   }
 
   @Get('/profile')

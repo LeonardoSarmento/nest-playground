@@ -40,6 +40,7 @@ export class AuthService {
     };
 
     return await this.createToken(req, res, tokenPayload);
+    // return res.send(response).end();
   }
 
   public async refreshToken(req: Request, res: Response, token: string) {
@@ -55,6 +56,7 @@ export class AuthService {
     };
 
     return await this.createToken(req, res, tokenPayload);
+    // return res.send(response).end();
   }
 
   public async createToken(
@@ -71,7 +73,10 @@ export class AuthService {
       this.jwtConfiguration.jwtRefreshTtl,
     );
 
-    res.cookie(refreshTokenName, refreshToken, tokenConfiguration);
+    res
+      .cookie(refreshTokenName, refreshToken, tokenConfiguration)
+      .send({ token, refreshToken })
+      .end();
     return { token, refreshToken };
   }
 
