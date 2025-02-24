@@ -15,6 +15,8 @@ import { AuthModule } from './auth/auth.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorExceptionFilter } from './common/filters/errorExceptions.filters';
 import { NormalizeResponseInterceptor } from './common/interceptors/normalize-data.interceptor';
+import { PostModule } from './post/post.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { NormalizeResponseInterceptor } from './common/interceptors/normalize-da
     DatabaseModule,
     AuthModule,
     UserModule,
+    PostModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [
