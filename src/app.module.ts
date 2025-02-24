@@ -25,7 +25,6 @@ import { FileModule } from './file/file.module';
       isGlobal: true,
       load: [configuration],
     }),
-
     DatabaseModule,
     AuthModule,
     UserModule,

@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import cookieParser from 'cookie-parser';
+import * as cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 import { Environment } from './config/env.validations';
-import jj from '../package.json';
+import { version } from '../package.json';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
@@ -38,7 +38,7 @@ async function bootstrap() {
   const openAPIConfig = new DocumentBuilder()
     .setTitle('Playground')
     .setDescription('Testing the Nest.JS API')
-    .setVersion(`v${jj['version']}`)
+    .setVersion(`v${version}`)
     .build();
 
   openAPIConfig.servers = [];
@@ -69,7 +69,7 @@ async function bootstrap() {
 
   console.debug(`${APP_BASENAME}/swagger`);
   SwaggerModule.setup(`/swagger`, app, document, {
-    customSiteTitle: 'Swagger UI | IEE_551243',
+    customSiteTitle: 'Swagger UI | Playground',
     jsonDocumentUrl: 'openapi.json',
     explorer: true,
     swaggerOptions: {

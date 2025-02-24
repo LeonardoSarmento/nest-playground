@@ -13,16 +13,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinTable,
   OneToMany,
   PrimaryGeneratedColumn,
   Relation,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { USER_ROLE_CODE as ROLES } from '../enums/role.enum';
-import { PostEntity } from 'src/post/entities/post.entity';
+import { PostEntity } from '../../post/entities/post.entity';
 
-@Entity({ name: 'user' })
+@Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn('increment')
   @ApiProperty({ type: Number })
@@ -67,7 +66,7 @@ export class UserEntity {
   birthday?: Date;
 
   @OneToMany(() => PostEntity, (posts) => posts.user)
-  @JoinTable({ name: 'post' })
+  @ApiProperty({ type: Array<PostEntity> })
   posts: Relation<PostEntity[]>;
 
   @CreateDateColumn()

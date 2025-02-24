@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
-@Injectable()
+@Injectable({ scope: Scope.DEFAULT })
 export class PostService {
   create(createPostDto: CreatePostDto) {
     return 'This action adds a new post';

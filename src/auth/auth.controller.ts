@@ -9,11 +9,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { Request, Response } from 'express';
 import { LoginDto } from './dto/login.dto';
 import { Roles } from './decorators/roles.decorator';
-import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
+import { USER_ROLE_CODE as ROLES } from '../user/enums/role.enum';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 import { AuthEntity } from './entities/auth.entity';
@@ -22,7 +22,7 @@ import {
   tokenConfiguration,
   tokenName,
 } from './configuration/constants.configuration';
-import { UserEntity } from 'src/user/entities/user.entity';
+import { UserEntity } from '../user/entities/user.entity';
 import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)

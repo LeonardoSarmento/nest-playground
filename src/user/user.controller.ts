@@ -16,8 +16,8 @@ import { UserUpdateDto } from './dto/update-user.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { UserUniquesDto } from './dto/unique-user.dto';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { USER_ROLE_CODE as ROLES } from 'src/user/enums/role.enum';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { USER_ROLE_CODE as ROLES } from '../user/enums/role.enum';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
@@ -34,7 +34,7 @@ export class UserController {
 
   @Get(['all'])
   @Roles([ROLES.ADMIN])
-  @ApiOkResponse({ type: [UserEntity] })
+  @ApiOkResponse({ type: UserEntity, isArray: true })
   async findAll() {
     return await this._userService.findAll();
   }

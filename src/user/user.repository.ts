@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { UserEntity } from './entities/user.entity';
 import { UserUpdateDto } from './dto/update-user.dto';
 import { UserUniquesDto } from './dto/unique-user.dto';
-import { Helpers } from 'src/helpers/helpers.global';
+import { Helpers } from '../helpers/helpers.global';
 
 @Injectable()
 export class UserRepository {
@@ -12,11 +12,11 @@ export class UserRepository {
     private readonly _repository: Repository<UserEntity>,
   ) {}
 
-  async create(user: UserEntity): Promise<UserEntity> {
+  public async create(user: UserEntity): Promise<UserEntity> {
     return this._repository.save(user);
   }
 
-  async findAll(): Promise<UserEntity[]> {
+  public async findAll(): Promise<UserEntity[]> {
     return this._repository.find();
   }
 
@@ -24,11 +24,13 @@ export class UserRepository {
     return this._repository.findOne({ where: { id } });
   }
 
-  async findOne(id: number): Promise<UserEntity | null> {
+  public async findOne(id: number): Promise<UserEntity | null> {
     return this.getById(id);
   }
 
-  async safeFindByUnique(uniques: UserUniquesDto): Promise<UserEntity | null> {
+  public async safeFindByUnique(
+    uniques: UserUniquesDto,
+  ): Promise<UserEntity | null> {
     if (Object.keys(uniques).length === 0) return null;
     const user = await this._repository.findOne({
       where: [
@@ -40,7 +42,9 @@ export class UserRepository {
     return user;
   }
 
-  async findByUnique(uniques: UserUniquesDto): Promise<UserEntity | null> {
+  public async findByUnique(
+    uniques: UserUniquesDto,
+  ): Promise<UserEntity | null> {
     if (Object.keys(uniques).length === 0) return null;
 
     const user = await this._repository.findOne({
@@ -54,7 +58,10 @@ export class UserRepository {
     return user && Helpers.isMatching<UserEntity>(user, uniques) ? user : null;
   }
 
-  async update(id: number, user: UserUpdateDto): Promise<UserEntity | null> {
+  public async update(
+    id: number,
+    user: UserUpdateDto,
+  ): Promise<UserEntity | null> {
     const existingUser = await this.getById(id);
     if (!existingUser) return null;
 
@@ -62,7 +69,7 @@ export class UserRepository {
     return this.getById(id);
   }
 
-  async remove(id: number): Promise<UserEntity | null> {
+  public async remove(id: number): Promise<UserEntity | null> {
     const user = await this.getById(id);
     if (!user) return null;
 

@@ -1,17 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
-import { PostEntity } from 'src/post/entities/post.entity';
+import { PostEntity } from '../../post/entities/post.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
 } from 'typeorm';
 
-@Entity({ name: 'file' })
+@Entity('file')
 export class FileEntity {
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty({ type: String })
@@ -22,8 +22,8 @@ export class FileEntity {
   name: string;
 
   @OneToOne(() => PostEntity, (post) => post.image)
-  @JoinColumn({ name: 'post' })
-  post: PostEntity;
+  @ApiProperty({ type: PostEntity })
+  post: Relation<PostEntity>;
 
   @CreateDateColumn()
   @ApiProperty({ type: Date })
