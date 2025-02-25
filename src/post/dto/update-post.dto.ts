@@ -1,4 +1,11 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreatePostDto } from './create-post.dto';
+import { PostCreateDto } from './create-post.dto';
 
-export class UpdatePostDto extends PartialType(CreatePostDto) {}
+export class PostUpdateDto extends PartialType(PostCreateDto) {
+  constructor(dto?: PostUpdateDto) {
+    super();
+    if (dto) {
+      Object.assign(this, dto);
+    }
+  }
+}

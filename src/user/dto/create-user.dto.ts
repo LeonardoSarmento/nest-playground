@@ -1,20 +1,11 @@
 import { UserEntity } from '../entities/user.entity';
-import { ApiHideProperty, OmitType } from '@nestjs/swagger';
+import { OmitType } from '@nestjs/swagger';
 
 export class UserCreateDto extends OmitType(UserEntity, [
   'id',
   'createdAt',
   'updatedAt',
 ]) {
-  @ApiHideProperty()
-  id: UserEntity['id'];
-
-  @ApiHideProperty()
-  createdAt: UserEntity['createdAt'] = new Date();
-
-  @ApiHideProperty()
-  updatedAt: UserEntity['updatedAt'] = new Date();
-
   constructor(dto?: UserCreateDtoType) {
     super();
 
@@ -24,7 +15,11 @@ export class UserCreateDto extends OmitType(UserEntity, [
   }
 
   public toEntity(): UserEntity {
-    return new UserEntity(this);
+    const user = new UserEntity(this);
+    if (this.password) {
+      user.password = this.password;
+    }
+    return user;
   }
 }
 

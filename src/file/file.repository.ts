@@ -8,26 +8,26 @@ import { FileEntity } from './entities/file.entity';
 export class FileRepository {
   constructor(
     @Inject('FILE_REPOSITORY')
-    private readonly _repository: Repository<FileEntity>,
+    private readonly repository: Repository<FileEntity>,
   ) {}
 
   async insertFile(createFileDto: CreateFileDto) {
-    return await this._repository.save(createFileDto);
+    return await this.repository.save(createFileDto);
   }
 
   async findAll() {
-    return await this._repository.find();
+    return await this.repository.find();
   }
 
   async findOne(id: string) {
-    return await this._repository.findOne({ where: { id } });
+    return await this.repository.findOne({ where: { id } });
   }
 
   async update(id: string, updateFileDto: UpdateFileDto) {
-    return await this._repository.update(id, updateFileDto);
+    return await this.repository.update(id, updateFileDto);
   }
 
   async remove(id: string) {
-    return await this._repository.delete(id);
+    return await this.repository.delete(id);
   }
 }

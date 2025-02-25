@@ -24,6 +24,7 @@ import {
 } from './configuration/constants.configuration';
 import { UserEntity } from '../user/entities/user.entity';
 import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
+import { TokenPayloadParam } from './params/token-payload.param';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
@@ -37,12 +38,8 @@ export class AuthController {
   @Public()
   @ApiOkResponse({ type: AuthEntity })
   @Post('/login')
-  async login(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Body() credential: LoginDto,
-  ) {
-    const response = await this._service.login(req, res, credential);
+  async login(@Res() res: Response, @Body() credential: LoginDto) {
+    const response = await this._service.login(res, credential);
     res.send(response).end();
   }
 
@@ -57,20 +54,20 @@ export class AuthController {
 
   @Post('/refreshToken')
   @ApiOkResponse({ type: AuthEntity })
-  async refreshToken(@Req() req: Request, @Res() res: Response) {
-    const refreshToken = req.cookies[refreshTokenName] as string;
-    const response = await this._service.refreshToken(req, res, refreshToken);
+  async refreshToken(
+    @TokenPayloadParam(refreshTokenName) refreshToken: string,
+    @Res() res: Response,
+  ) {
+    const response = await this._service.refreshToken(res, refreshToken);
     res.send(response).end();
   }
 
   @Get('/profile')
   @ApiOkResponse({ type: UserEntity })
   @Roles([ROLES.ADMIN, ROLES.USER])
-  public async getProfile(@Req() req: Request) {
-    const tokenPayload = await this._service.verifyTokenPayload(
-      req.cookies[tokenName] as string,
-    );
-    return await this._userService.findByUnique({ id: tokenPayload?.userId });
+  public async getProfile(@TokenPayloadParam() token: string) {
+    const { userId } = await this._service.verifyTokenPayload(token);
+    return await this._userService.findByUnique({ id: userId });
   }
 
   @Roles([ROLES.ADMIN, ROLES.USER])

@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsOptional } from 'class-validator';
 import { PostEntity } from '../../post/entities/post.entity';
 import {
   Column,
@@ -9,6 +8,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('file')
@@ -21,7 +21,15 @@ export class FileEntity {
   @ApiProperty({ type: String })
   name: string;
 
-  @OneToOne(() => PostEntity, (post) => post.image)
+  @Column()
+  @ApiProperty({ type: String })
+  extension: string;
+
+  @Column({ name: 'mime_type' })
+  @ApiProperty({ type: String })
+  mimeType: string;
+
+  @OneToOne(() => PostEntity, (post) => post.image, { nullable: true })
   @ApiProperty({ type: PostEntity })
   post: Relation<PostEntity>;
 
@@ -29,9 +37,14 @@ export class FileEntity {
   @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @Column()
+  @UpdateDateColumn()
   @ApiProperty({ type: Date, required: false })
   @Type(() => Date)
-  @IsOptional()
   updatedAt: Date;
+
+  constructor(entity?: Partial<FileEntity>) {
+    if (entity) {
+      Object.assign(this, entity);
+    }
+  }
 }

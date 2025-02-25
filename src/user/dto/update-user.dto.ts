@@ -1,12 +1,9 @@
-import { ApiHideProperty, OmitType, PartialType } from '@nestjs/swagger';
+import { OmitType, PartialType } from '@nestjs/swagger';
 import { UserEntity } from '../entities/user.entity';
 
 export class UserUpdateDto extends PartialType(
-  OmitType(UserEntity, ['id', 'createdAt', 'updatedAt']),
+  OmitType(UserEntity, ['id', 'createdAt', 'updatedAt', 'posts']),
 ) {
-  @ApiHideProperty()
-  updatedAt?: Date | undefined = new Date();
-
   constructor(dto?: UserUpdateDto) {
     super();
 
@@ -15,7 +12,11 @@ export class UserUpdateDto extends PartialType(
     }
   }
 
-  public toEntity(): UserEntity {
-    return new UserEntity(this);
+  public toEntity(existingUser: UserEntity): UserEntity {
+    Object.assign(existingUser, this);
+    if (this.password) {
+      existingUser.password = this.password;
+    }
+    return existingUser;
   }
 }

@@ -16,6 +16,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   Relation,
+  UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { USER_ROLE_CODE as ROLES } from '../enums/role.enum';
@@ -43,10 +44,11 @@ export class UserEntity {
   @IsStrongPassword(undefined, { message: '"Senha" não é forte suficiente' })
   password: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: ROLES.USER })
   @ApiProperty({ enum: ROLES, required: false })
   @IsEnum(ROLES)
-  role: ROLES;
+  @IsOptional()
+  role: ROLES = ROLES.USER;
 
   @Column({ unique: true, nullable: true })
   @ApiProperty({
@@ -73,27 +75,31 @@ export class UserEntity {
   @ApiProperty({ type: Date })
   createdAt: Date;
 
-  @Column()
+  @UpdateDateColumn()
   @ApiProperty({ type: Date, required: false })
   @Type(() => Date)
-  @IsOptional()
   updatedAt: Date;
 
-  constructor(
-    entity?: Partial<Omit<UserEntity, 'encryptPassword' | 'verifyPassword'>>,
-  ) {
+  constructor(entity?: Partial<UserEntity>) {
     if (entity) {
       Object.assign(this, entity);
     }
   }
 
   @BeforeInsert()
-  @BeforeUpdate()
-  encryptPassword() {
-    this.password = bcrypt.hashSync(this.password, 10);
+  async encryptPassword() {
+    this.password = await bcrypt.hash(this.password, 10);
   }
 
-  public verifyPassword(password: string) {
-    return bcrypt.compareSync(password, this.password);
+  @BeforeUpdate()
+  async updatePassword() {
+    if (this.password) {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+  }
+
+  public async verifyPassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password);
   }
 }

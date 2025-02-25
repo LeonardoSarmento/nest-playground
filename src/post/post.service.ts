@@ -1,26 +1,48 @@
-import { Injectable, Scope } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PostCreateDto } from './dto/create-post.dto';
+import { PostUpdateDto } from './dto/update-post.dto';
+import { UserEntity } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
+import { UserNotFoundException } from 'src/auth/exception/user-notFound.exception';
+import { PostRepository } from './post.repository';
+import { PostEntity } from './entities/post.entity';
 
-@Injectable({ scope: Scope.DEFAULT })
+@Injectable()
 export class PostService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(
+    private readonly repository: PostRepository,
+    private readonly _userService: UserService,
+  ) {}
+  async create(createPostDto: PostCreateDto, creatorId: UserEntity['id']) {
+    const user = await this._userService.findByUnique({ id: creatorId });
+    if (!user) throw new UserNotFoundException();
+
+    createPostDto.user = user;
+
+    const post = createPostDto.toEntity();
+
+    return this.repository.create(post);
   }
 
-  findAll() {
-    return `This action returns all post`;
+  async findAll() {
+    return this.repository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: PostEntity['id']) {
+    const post = await this.repository.findOne(id);
+    if (!post) throw new NotFoundException('Post não encontrado');
+    return post;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: PostEntity['id'], updatePostDto: PostUpdateDto) {
+    const updatedPost = await this.repository.update(id, updatePostDto);
+    if (!updatedPost) throw new NotFoundException('Post não encontrado');
+    return updatedPost;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: PostEntity['id']) {
+    const post = await this.repository.remove(id);
+    if (!post) throw new NotFoundException('Post não encontrado');
+    return post;
   }
 }

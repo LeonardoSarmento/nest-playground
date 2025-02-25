@@ -50,7 +50,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             refreshTokenName,
           );
 
-          await this._authService.refreshToken(request, response, refreshToken);
+          await this._authService.refreshToken(response, refreshToken);
 
           return true;
         }

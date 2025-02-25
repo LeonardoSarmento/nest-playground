@@ -1,0 +1,4 @@
+export enum STATUS_TYPES {
+  ACTIVE = 'ACTIVE',
+  DEACTIVATED = 'DEACTIVATED',
+}

@@ -6,7 +6,7 @@ import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { JwtPayloadDto } from './dto/jwt.dto';
 import { JwtDecodePayloadDto } from './dto/jwtDecode.dto';
 import { LoginDto } from './dto/login.dto';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ConfigType } from '@nestjs/config';
 import jwtConfig, {
   refreshTokenName,
@@ -26,7 +26,7 @@ export class AuthService {
     private readonly _hashingService: HashingService,
   ) {}
 
-  public async login(req: Request, res: Response, credential: LoginDto) {
+  public async login(res: Response, credential: LoginDto) {
     const userIsValid = await this.validateUser(
       credential.username,
       credential.password,
@@ -39,10 +39,10 @@ export class AuthService {
       role: userIsValid.data.role,
     };
 
-    return await this.createToken(req, res, tokenPayload);
+    return await this.createToken(res, tokenPayload);
   }
 
-  public async refreshToken(req: Request, res: Response, token: string) {
+  public async refreshToken(res: Response, token: string) {
     const { userId } = await this.verifyTokenPayload(token);
 
     const user = await this._userService.findByUnique({ id: userId });
@@ -54,16 +54,11 @@ export class AuthService {
       role: user.role,
     };
 
-    return await this.createToken(req, res, tokenPayload);
+    return await this.createToken(res, tokenPayload);
   }
 
-  public async createToken(
-    req: Request,
-    res: Response,
-    tokenPayload: JwtPayloadDto,
-  ) {
+  public async createToken(res: Response, tokenPayload: JwtPayloadDto) {
     const token = await this.generateToken(tokenPayload);
-    req.user = tokenPayload;
     res.cookie(tokenName, token, tokenConfiguration);
 
     const refreshToken = await this.generateToken(
