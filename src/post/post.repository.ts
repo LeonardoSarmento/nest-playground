@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { PostEntity } from './entities/post.entity';
 import { PostUpdateDto } from './dto/update-post.dto';
+import { PostUniquesDto } from './dto/unique-post.dto';
+import { UserUniquesDto } from 'src/user/dto/unique-user.dto';
 
 @Injectable()
 export class PostRepository {
@@ -16,6 +18,25 @@ export class PostRepository {
 
   public async findAll(): Promise<PostEntity[]> {
     return this._repository.find();
+  }
+
+  public async findByUnique(
+    uniques: PostUniquesDto,
+    userUniques: UserUniquesDto,
+  ): Promise<PostEntity[] | null> {
+    return await this._repository.find({
+      where: [
+        { id: uniques.id },
+        {
+          user: [
+            { id: userUniques.id },
+            { username: userUniques.username },
+            { email: userUniques.email },
+          ],
+        },
+      ],
+      // relations: { user: true },
+    });
   }
 
   private async getById(id: PostEntity['id']): Promise<PostEntity | null> {

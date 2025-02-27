@@ -25,7 +25,10 @@ import { PostEntity } from '../../post/entities/post.entity';
 @Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn('increment')
-  @ApiProperty({ type: Number })
+  @ApiProperty({
+    type: Number,
+    description: 'Identificador de Usuário',
+  })
   id: number;
 
   @Column({ unique: true })

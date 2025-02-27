@@ -72,7 +72,6 @@ export class PostEntity {
   @UpdateDateColumn()
   @ApiProperty({ type: Date, required: false })
   @Type(() => Date)
-  @IsOptional()
   updatedAt: Date;
 
   constructor(entity?: Partial<PostEntity>) {

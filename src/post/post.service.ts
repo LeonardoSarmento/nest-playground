@@ -6,6 +6,8 @@ import { UserService } from 'src/user/user.service';
 import { UserNotFoundException } from 'src/auth/exception/user-notFound.exception';
 import { PostRepository } from './post.repository';
 import { PostEntity } from './entities/post.entity';
+import { PostUniquesDto } from './dto/unique-post.dto';
+import { UserUniquesDto } from 'src/user/dto/unique-user.dto';
 
 @Injectable()
 export class PostService {
@@ -14,18 +16,26 @@ export class PostService {
     private readonly _userService: UserService,
   ) {}
   async create(createPostDto: PostCreateDto, creatorId: UserEntity['id']) {
-    const user = await this._userService.findByUnique({ id: creatorId });
+    let userId: UserEntity['id'];
+    if (!createPostDto.userId) {
+      userId = creatorId;
+    } else {
+      userId = createPostDto.userId;
+    }
+    const user = await this._userService.findByUnique({ id: userId });
     if (!user) throw new UserNotFoundException();
 
-    createPostDto.user = user;
-
-    const post = createPostDto.toEntity();
+    const post = createPostDto.toEntity(undefined, user);
 
     return this.repository.create(post);
   }
 
   async findAll() {
     return this.repository.findAll();
+  }
+
+  async findByUnique(uniques: PostUniquesDto, userUniques: UserUniquesDto) {
+    return this.repository.findByUnique(uniques, userUniques);
   }
 
   async findOne(id: PostEntity['id']) {

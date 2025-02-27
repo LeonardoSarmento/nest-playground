@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import { Environment } from './config/env.validations';
 import { version } from '../package.json';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+// import { doubleCsrf } from 'csrf-csrf';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -19,6 +21,8 @@ async function bootstrap() {
     configService.get<Environment>('NODE_ENV') || Environment.Development;
   const APP_BASENAME: string =
     configService.get<string>('app_basename') || 'app_basename';
+
+  if (NODE_ENV == Environment.Production) app.use(helmet());
 
   app.enableCors({
     origin: true,

@@ -7,14 +7,22 @@ import {
   Param,
   Delete,
   UnauthorizedException,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipeBuilder,
+  HttpStatus,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { PostUpdateDto } from './dto/update-post.dto';
 import { PostCreateDto } from './dto/create-post.dto';
 import { AuthService } from 'src/auth/auth.service';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiConsumes, ApiOkResponse } from '@nestjs/swagger';
 import { PostEntity } from './entities/post.entity';
 import { TokenPayloadParam } from 'src/auth/params/token-payload.param';
+import { PostUniquesDto } from './dto/unique-post.dto';
+import { UserUniquesDto } from 'src/user/dto/unique-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('post')
 export class PostController {
@@ -25,7 +33,22 @@ export class PostController {
 
   @Post()
   @ApiOkResponse({ type: PostEntity })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   async create(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /jpeg|jpg|png/g,
+        })
+        .addMaxSizeValidator({
+          maxSize: 10 * (1024 * 1024),
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: Express.Multer.File,
     @Body() createPostDto: PostCreateDto,
     @TokenPayloadParam() token: string,
   ) {
@@ -42,8 +65,11 @@ export class PostController {
 
   @Get('/list')
   @ApiOkResponse({ type: PostEntity, isArray: true })
-  ListAll() {
-    return this.postService.findAll();
+  ListAll(
+    @Query() uniques: PostUniquesDto,
+    @Query() userUniques: UserUniquesDto,
+  ) {
+    return this.postService.findByUnique(uniques, userUniques);
   }
 
   @Get(':id')

@@ -12,11 +12,12 @@ import { DatabaseModule } from './database/database.module';
 import configuration from './config/configuration';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorExceptionFilter } from './common/filters/errorExceptions.filters';
 import { NormalizeResponseInterceptor } from './common/interceptors/normalize-data.interceptor';
 import { PostModule } from './post/post.module';
 import { FileModule } from './file/file.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -24,6 +25,15 @@ import { FileModule } from './file/file.module';
       envFilePath: '.env',
       isGlobal: true,
       load: [configuration],
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+          blockDuration: 5000,
+        },
+      ],
     }),
     DatabaseModule,
     AuthModule,
@@ -36,6 +46,10 @@ import { FileModule } from './file/file.module';
     AppService,
     { provide: APP_FILTER, useClass: ErrorExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: NormalizeResponseInterceptor },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {
